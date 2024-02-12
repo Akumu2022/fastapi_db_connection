@@ -4,9 +4,10 @@ import models
 from db import engine,SessionLocal
 from sqlalchemy.orm import Session
 from pydantic import BaseModel #for validation
-
+import auth
 
 app = FastAPI()
+app.include_router(auth.router)
 models.base.metadata.create_all(bind=engine)
 
 
@@ -15,7 +16,7 @@ class UserBase(BaseModel):
     email:str
     phone:str
     password:str
-    confirm_password: str
+    # confirm_password: str
     
 class UserLogin(BaseModel):
     email: str
@@ -53,7 +54,7 @@ async def get_user(user_id: str, db:db_dependency):
 
 
 @app.post("/api/v1/login",status_code=status.HTTP_200_OK)
-async def login_user(user: UserLogin, db: db_dependency):
+async def login_user(user: UserBase, db: db_dependency):
     user_from_db = db.query(models.User).filter(models.User.email == user.email).first()
     if user_from_db is None or user_from_db.password != user.password:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid email or password")
