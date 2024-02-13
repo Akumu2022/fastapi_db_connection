@@ -7,7 +7,7 @@ from pydantic import BaseModel #for validation
 import auth
 
 app = FastAPI()
-app.include_router(auth.router)
+# app.include_router(auth.router)
 models.base.metadata.create_all(bind=engine)
 
 
@@ -16,7 +16,7 @@ class UserBase(BaseModel):
     email:str
     phone:str
     password:str
-    # confirm_password: str
+    confirm_password: str
     
 class UserLogin(BaseModel):
     email: str
@@ -52,10 +52,19 @@ async def get_user(user_id: str, db:db_dependency):
         raise HTTPException(status_code=404, detail="No such user")
     return user
 
+@app.post("/api/v1/login", status_code=status.HTTP_200_OK)
+async def login_user(user_login: UserLogin, db: db_dependency):
+    user_from_db = db.query(models.User).filter(models.User.email == user_login.email).first()
+    if user_from_db is None or user_from_db.password != user_login.password:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+    return {"msg": "Login successful"}
 
-@app.post("/api/v1/login",status_code=status.HTTP_200_OK)
-async def login_user(user: UserBase, db: db_dependency):
-    user_from_db = db.query(models.User).filter(models.User.email == user.email).first()
-    if user_from_db is None or user_from_db.password != user.password:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid email or password")
-    return {"msg":"Login successful"}
+@app.delete("/api/v1/users{user_id}",status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(user_id: str,user_login: UserLogin,db:db_dependency):
+    user_from_db = db.query(models.User).filter(models.User.username==user_id).first()
+    if user_from_db is None or user_from_db.password != user_login.password:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    
+    db.delete(user_from_db)
+    db.commit()
+    return {"msg":"user deleted successfully"}

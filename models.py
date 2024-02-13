@@ -10,3 +10,4 @@ class User(base):
     email = Column(EmailType, nullable=False, unique=True)    
     phone= Column(String(13),nullable=False,unique=True)
     password = Column(String(100), nullable=False)   
+    confirm_password=Column(String(100), nullable=False)
