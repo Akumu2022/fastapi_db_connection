@@ -1,7 +1,5 @@
-from pydantic import BaseModel
-from sqlalchemy import Boolean,Column,Integer,String
+from sqlalchemy import Column,String
 from db import base
-from passlib.hash import bcrypt
 from sqlalchemy_utils.types.email import EmailType
 
 class User(base):
